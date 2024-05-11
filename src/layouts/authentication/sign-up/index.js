@@ -14,7 +14,7 @@ Coded by www.creative-tim.com
 */
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -31,10 +31,50 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import { useState } from "react";
+import { TextField } from "@mui/material";
 
 function Cover() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [open, setOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event) => {
+    if (password === confirmPassword) {
+      const response = await fetch("/api4/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer dsfsd",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          first_name: firstName,
+          last_name: lastName,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        setErrorMessage(message);
+        setOpen(true);
+      } else {
+        navigate("/authentication/sign-in"); // Redirect to login page on successful signup
+      }
+    } else {
+      setErrorMessage("Passwords don't match!"); // Set error message for password mismatch
+      setOpen(true);
+    }
+  };
+
   return (
-    <CoverLayout image={bgImage}>
+    <CoverLayout>
       <Card>
         <MDBox
           variant="gradient"
@@ -50,45 +90,79 @@ function Cover() {
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
             Join us today
           </MDTypography>
-          <MDTypography display="block" variant="button" color="white" my={1}>
-            Enter your email and password to register
-          </MDTypography>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
-            <MDBox mb={2}>
-              <MDInput type="text" label="Name" variant="standard" fullWidth />
-            </MDBox>
-            <MDBox mb={2}>
-              <MDInput type="email" label="Email" variant="standard" fullWidth />
-            </MDBox>
-            <MDBox mb={2}>
-              <MDInput type="password" label="Password" variant="standard" fullWidth />
-            </MDBox>
-            <MDBox display="flex" alignItems="center" ml={-1}>
-              <Checkbox />
-              <MDTypography
-                variant="button"
-                fontWeight="regular"
-                color="text"
-                sx={{ cursor: "pointer", userSelect: "none", ml: -1 }}
-              >
-                &nbsp;&nbsp;I agree the&nbsp;
-              </MDTypography>
-              <MDTypography
-                component="a"
-                href="#"
-                variant="button"
-                fontWeight="bold"
-                color="info"
-                textGradient
-              >
-                Terms and Conditions
-              </MDTypography>
-            </MDBox>
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="firstName"
+              label="First Name"
+              name="firstName"
+              autoComplete="firstName"
+              autoFocus
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="lastName"
+              label="Last Name"
+              name="lastName"
+              autoComplete="lastName"
+              autoFocus
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              autoFocus
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              id="confirmPassword"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+
+            <MDBox display="flex" alignItems="center" ml={-1}></MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton variant="gradient" color="info" fullWidth onClick={() => handleSubmit()}>
+                sign up
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">

@@ -33,7 +33,7 @@ import Footer from "layouts/authentication/components/Footer";
 function CoverLayout({ coverHeight, image, children }) {
   return (
     <PageLayout>
-      <DefaultNavbar transparent light />
+      <DefaultNavbar transparent dark />
       <MDBox
         width="calc(100% - 2rem)"
         minHeight={coverHeight}

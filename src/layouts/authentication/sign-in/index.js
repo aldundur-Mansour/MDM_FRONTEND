@@ -40,14 +40,40 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import { TextField } from "@mui/material";
+import CoverLayout from "../components/CoverLayout";
 
 function Basic() {
   const [rememberMe, setRememberMe] = useState(false);
+  const [userName, setUserName] = useState("");
 
+  const [password, setPassword] = useState("");
+
+  const handleSubmit = async (event) => {
+    const response = await fetch("/api4/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: userName,
+        password: password,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      localStorage.setItem("token", data.data.token);
+      window.location.href = "/dashboard";
+      // navigate("/dashboard");
+    } else {
+    }
+  };
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
   return (
-    <BasicLayout image={bgImage}>
+    <CoverLayout>
       <Card>
         <MDBox
           variant="gradient"
@@ -63,32 +89,38 @@ function Basic() {
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
             Sign in
           </MDTypography>
-          <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
-            <Grid item xs={2}>
-              <MDTypography component={MuiLink} href="#" variant="body1" color="white">
-                <FacebookIcon color="inherit" />
-              </MDTypography>
-            </Grid>
-            <Grid item xs={2}>
-              <MDTypography component={MuiLink} href="#" variant="body1" color="white">
-                <GitHubIcon color="inherit" />
-              </MDTypography>
-            </Grid>
-            <Grid item xs={2}>
-              <MDTypography component={MuiLink} href="#" variant="body1" color="white">
-                <GoogleIcon color="inherit" />
-              </MDTypography>
-            </Grid>
-          </Grid>
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />{" "}
             </MDBox>
-            <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
-            </MDBox>
+
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
               <MDTypography
@@ -102,7 +134,7 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
+              <MDButton variant="gradient" color="info" fullWidth onClick={() => handleSubmit()}>
                 sign in
               </MDButton>
             </MDBox>
@@ -124,7 +156,7 @@ function Basic() {
           </MDBox>
         </MDBox>
       </Card>
-    </BasicLayout>
+    </CoverLayout>
   );
 }
 
