@@ -29,6 +29,9 @@ import DataTable from "examples/Tables/DataTable";
 import {
   Modal,
   Box,
+  Stepper,
+  Step,
+  StepLabel,
   Typography,
   Button,
   Popover,
@@ -42,11 +45,17 @@ import {
   DialogTitle,
   Dialog,
   CircularProgress,
+  Tabs,
+  Tab,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 
 // Data
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
+
 import usersTableData from "layouts/tables/data/usersTableData";
 import { useEffect, useState } from "react";
 import {
@@ -86,9 +95,16 @@ function PolicyTable() {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [policies, setPolicies] = useState([]);
+  const [customConfig, setCustomConfig] = useState([]);
+
   const [openModal, setOpenModal] = useState(false);
   const [openModalEdit, setOpenModalEdit] = useState(false);
   const [loader, setLoader] = useState(true);
+  //manage tabs value
+  const [value, setValue] = useState(0);
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+  };
 
   const [barcodeValue, setBarcodeValue] = useState("");
   const [selectedPolicy, setSelectedPolicy] = useState("");
@@ -179,6 +195,26 @@ function PolicyTable() {
 
     fetchPolicies();
   }, []);
+
+  const fetchCustomConfigPolicies = async () => {
+    try {
+      const response = await fetch("/api5/customConfigurations", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log("custom data :", data);
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch policies");
+      }
+      setCustomConfig(data || []);
+    } catch (error) {
+      console.error("Error fetching policies:", error.message);
+    }
+  };
+
   const fetchPolicies = async () => {
     try {
       const response = await fetch("/api3/mdm/policy", {
@@ -212,6 +248,26 @@ function PolicyTable() {
         setDevices(data.data); // Store the fetched data in state
       }
     }
+    const fetchCustomConfigPolicies1 = async () => {
+      try {
+        const response = await fetch("/api5/customConfigurations", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        console.log("custom data :", data);
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch policies");
+        }
+        setCustomConfig(data || []);
+      } catch (error) {
+        console.error("Error fetching policies:", error.message);
+      }
+    };
+    fetchCustomConfigPolicies1();
+
     loadDevice();
   }, []);
 
@@ -220,6 +276,33 @@ function PolicyTable() {
     policies,
     handelDeviceClick,
   });
+
+  let columnsCustom = [
+    { Header: "ID", accessor: "ID", width: "45%", align: "left" },
+    { Header: "Configuration", accessor: "Configuration", align: "left" },
+    { Header: "Name", accessor: "Name", align: "left" },
+  ];
+
+  let rowsCustom = customConfig?.data?.map((policy, index) => ({
+    ID: (
+      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+        {policy?._id}
+      </MDTypography>
+    ),
+    Configuration: (
+      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+        {policy?.configuration_name}
+      </MDTypography>
+    ),
+    Name: (
+      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+        {policy?.policyName}
+      </MDTypography>
+    ),
+  }));
+
+  console.log("row", rowsCustom);
+  console.log("new row", deviceRows);
 
   const handleDeletePolicy = async (policyName) => {
     try {
@@ -248,7 +331,8 @@ function PolicyTable() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <MDButton onClick={() => setOpenModal(true)}>Configure Device</MDButton>
+      {value === 0 && <MDButton onClick={() => setOpenModal(true)}>Configure Device</MDButton>}{" "}
+      {value === 1 && <PolicyModal />}
       {renderSuccessSB}
       <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth>
         <DialogTitle>Add New Device</DialogTitle>
@@ -306,7 +390,6 @@ function PolicyTable() {
           <MDButton onClick={() => setOpenModal(false)}>Close</MDButton>
         </DialogActions>
       </Dialog>
-
       <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
@@ -349,21 +432,47 @@ function PolicyTable() {
         <Grid container spacing={6}>
           <Grid item xs={12}>
             <Card>
-              <MDBox pt={3}>
-                {loader && (
-                  <Box display="flex" justifyContent="center" alignItems="center">
-                    <CircularProgress color="inherit" />
-                  </Box>
-                )}
+              <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
+                <Tab label="Device Policies" />
 
-                <DataTable
-                  table={{ columns, rows }}
-                  isSorted={false}
-                  entriesPerPage={false}
-                  showTotalEntries={false}
-                  noEndBorder
-                />
-              </MDBox>
+                <Tab label="Custom Policy Management" />
+              </Tabs>
+
+              {value === 0 && (
+                <MDBox pt={3}>
+                  {loader && (
+                    <Box display="flex" justifyContent="center" alignItems="center">
+                      <CircularProgress color="inherit" />
+                    </Box>
+                  )}
+
+                  <DataTable
+                    table={{ columns, rows }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                  />
+                </MDBox>
+              )}
+
+              {value === 1 && (
+                <MDBox pt={3}>
+                  {loader && (
+                    <Box display="flex" justifyContent="center" alignItems="center">
+                      <CircularProgress color="inherit" />
+                    </Box>
+                  )}
+
+                  <DataTable
+                    table={{ columns: columnsCustom, rows: rowsCustom ? rowsCustom : [] }}
+                    isSorted={false}
+                    entriesPerPage={false}
+                    showTotalEntries={false}
+                    noEndBorder
+                  />
+                </MDBox>
+              )}
             </Card>
           </Grid>
         </Grid>
@@ -373,3 +482,377 @@ function PolicyTable() {
 }
 
 export default PolicyTable;
+
+const deviceSettingsOptions = [
+  "screenCaptureDisabled",
+  "cameraDisabled",
+  "keyguardDisabledFeatures",
+  "defaultPermissionPolicy",
+  "addUserDisabled",
+  "adjustVolumeDisabled",
+  "factoryResetDisabled",
+  "installAppsDisabled",
+  "mountPhysicalMediaDisabled",
+  "modifyAccountsDisabled",
+  "safeBootDisabled",
+  "uninstallAppsDisabled",
+  "statusBarDisabled",
+  "keyguardDisabled",
+  "vpnConfigDisabled",
+  "wifiConfigDisabled",
+  "usbFileTransferDisabled",
+  "smsDisabled",
+  "dataRoamingDisabled",
+  "locationMode",
+];
+
+const appsOptions = [
+  "YouTube",
+  "Slack",
+  "Microsoft Teams",
+  "Zoom",
+  "Google Drive",
+  "Salesforce",
+  "Trello",
+  "Asana",
+  "Adobe Acrobat Reader",
+  "Microsoft Outlook",
+  "Dropbox",
+  "Evernote",
+  "LinkedIn",
+  "QuickBooks",
+  "Shopify",
+  "Google Analytics",
+  "Microsoft OneDrive",
+  "Tableau Mobile",
+  "Jira",
+  "HubSpot",
+];
+
+// Mapping apps to package names (hypothetical)
+const appPackageMap = {
+  YouTube: "com.google.android.youtube",
+  Slack: "com.slack",
+  "Microsoft Teams": "com.microsoft.teams",
+  Zoom: "us.zoom.videomeetings",
+  "Google Drive": "com.google.android.apps.docs",
+  Salesforce: "com.salesforce.chatter",
+  Trello: "com.trello",
+  Asana: "com.asana.app",
+  "Adobe Acrobat Reader": "com.adobe.reader",
+  "Microsoft Outlook": "com.microsoft.office.outlook",
+  Dropbox: "com.dropbox.android",
+  Evernote: "com.evernote",
+  LinkedIn: "com.linkedin.android",
+  QuickBooks: "com.intuit.quickbooks",
+  Shopify: "com.shopify.mobile",
+  "Google Analytics": "com.google.android.apps.giant",
+  "Microsoft OneDrive": "com.microsoft.skydrive",
+  "Tableau Mobile": "com.tableausoftware.app",
+  Jira: "com.atlassian.android.jira.core",
+  HubSpot: "com.hubspot.android",
+};
+const steps = ["Name Your Policy", "Choose Device Options", "Choose Apps"];
+
+function PolicyModal() {
+  const [open, setOpen] = useState(false);
+  const [deviceSettings, setDeviceSettings] = useState({});
+  const [installedApps, setInstalledApps] = useState({});
+  const [policyName, setPolicyName] = useState("");
+  const [savedPolicy, setSavedPolicy] = useState(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const [skipped, setSkipped] = useState(new Set());
+
+  const [deviceOptionsData, setDeviceOptionsData] = useState([]);
+  const [appsCanBeInstalled, setAppsCanBeInstalled] = useState([]);
+
+  const [checkedNames, setCheckedNames] = useState([]);
+  const [checkedAppsNames, setCheckedAppsNames] = useState([]);
+  console.log("checkedAppsNames:", checkedAppsNames);
+
+  const handelOptionsChange = (event, checkObj) => {
+    console.log(checkObj);
+    const { checked } = event.target;
+    if (checked) {
+      // Add policy object to state
+      setCheckedNames((prev) => [...prev, checkObj]);
+    } else {
+      // Remove policy object from state based on name
+      setCheckedNames((prev) => prev.filter((p) => p.name !== checkObj.name));
+    }
+  };
+
+  const handelAppsChange = (event, checkObj) => {
+    console.log(checkObj);
+    const { checked } = event.target;
+    if (checked) {
+      // Add policy object to state
+      setCheckedAppsNames((prev) => [...prev, checkObj]);
+    } else {
+      // Remove policy object from state based on name
+      setCheckedAppsNames((prev) => prev.filter((p) => p.name !== checkObj.name));
+    }
+  };
+
+  useEffect(() => {
+    const fetchPolicies = async () => {
+      try {
+        const response = await fetch("/api5/deviceSettingsOptions", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        console.log("Policies:", data);
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch policies");
+        }
+        setDeviceOptionsData(data.data || []);
+      } catch (error) {
+        console.error("Error fetching policies:", error.message);
+      }
+    };
+
+    const fetchPolicies1 = async () => {
+      try {
+        const response = await fetch("/api5/appsPackages/tasks", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        console.log("Policies:", data);
+        if (!response.ok) {
+          throw new Error(data.message || "Failed to fetch policies");
+        }
+        setAppsCanBeInstalled(data.data[0] || []);
+      } catch (error) {
+        console.error("Error fetching policies:", error.message);
+      }
+    };
+    fetchPolicies1();
+    fetchPolicies();
+  }, []);
+
+  const filterDataApi = async (filter) => {
+    try {
+      const response = await fetch("/api5/appsPackages/" + filter, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      console.log("Policies:", data);
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch policies");
+      }
+      setAppsCanBeInstalled(data.data[0] || []);
+    } catch (error) {
+      console.error("Error fetching policies:", error.message);
+    }
+  };
+  const isStepOptional = (step) => {
+    return step === 1;
+  };
+
+  const isStepSkipped = (step) => {
+    return skipped.has(step);
+  };
+
+  const handleNext = () => {
+    let newSkipped = skipped;
+    if (isStepSkipped(activeStep)) {
+      newSkipped = new Set(newSkipped.values());
+      newSkipped.delete(activeStep);
+    }
+    if (activeStep + 1 == 3) {
+      handleSave();
+      return;
+    }
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+
+    setSkipped(newSkipped);
+  };
+  console.log("Selected policies:", checkedNames);
+
+  const handleBack = () => {
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+  };
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleToggleDeviceSetting = (option) => {
+    setDeviceSettings((prev) => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
+  };
+
+  const handleAddPolicy = async (policy) => {
+    try {
+      const response = await fetch("api5/saveCustomConfiguration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": "",
+        },
+        body: JSON.stringify({
+          ...policy,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        throw new Error(data.message || "Failed to enroll device");
+      }
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleToggleApp = (app) => {
+    setInstalledApps((prev) => ({
+      ...prev,
+      [app]: !prev[app],
+    }));
+  };
+
+  const handleSave = async () => {
+    const applications = Object.keys(installedApps)
+      .filter((app) => installedApps[app])
+      .map((app) => ({
+        packageName: appPackageMap[app],
+        installType: "FORCE_INSTALLED",
+      }));
+    const policy = {
+      name: policyName,
+      policy: {
+        applications,
+        ...deviceSettings,
+      },
+    };
+    const data = {
+      apps: checkedAppsNames,
+      deviceOptions: checkedNames,
+      name: policyName,
+      configuration_name: policyName,
+    };
+    console.log("data", data);
+    setSavedPolicy(policy);
+    await handleAddPolicy(data);
+  };
+
+  return (
+    <Box>
+      <MDButton onClick={handleClickOpen}>Set up custom policy</MDButton>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+        <DialogTitle>Set Up Custom Policy</DialogTitle>
+        <DialogContent>
+          <Stepper activeStep={activeStep}>
+            {steps.map((label, index) => {
+              const stepProps = {};
+              const labelProps = {};
+              if (isStepOptional(index)) {
+                labelProps.optional = <Typography variant="caption"></Typography>;
+              }
+              if (isStepSkipped(index)) {
+                stepProps.completed = false;
+              }
+              return (
+                <Step key={label} {...stepProps}>
+                  <StepLabel {...labelProps}>{label}</StepLabel>
+                </Step>
+              );
+            })}
+          </Stepper>
+
+          <Typography sx={{ mt: 2, mb: 1 }}>Step {activeStep + 1}</Typography>
+
+          {activeStep == 0 && (
+            <TextField
+              fullWidth
+              label="Policy Name"
+              value={policyName}
+              onChange={(e) => setPolicyName(e.target.value)}
+              margin="normal"
+            />
+          )}
+          {activeStep === 1 && (
+            <>
+              <Typography variant="h6" gutterBottom>
+                Device Settings
+              </Typography>
+
+              <FormGroup>
+                {deviceOptionsData?.map((policy) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checkedNames.some((p) => p.name === policy.name)}
+                        onChange={(e) => handelOptionsChange(e, policy)}
+                        name={checkedNames.name}
+                      />
+                    }
+                    label={policy.friendlyName}
+                    key={policy._id}
+                  />
+                ))}
+              </FormGroup>
+            </>
+          )}
+          {activeStep === 2 && (
+            <>
+              {" "}
+              <Typography variant="h6" gutterBottom sx={{ marginTop: 2 }}>
+                Apps that can be installed
+              </Typography>
+              <div
+                style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}
+              >
+                <MDButton onClick={() => filterDataApi("tasks")}>Tasks</MDButton>
+                <MDButton onClick={() => filterDataApi("social")}>Social</MDButton>
+                <MDButton onClick={() => filterDataApi("utilities")}>Utilities</MDButton>
+              </div>
+              <FormGroup>
+                {appsCanBeInstalled?.apps?.map((app) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checkedAppsNames.some((p) => p.name === app.name)}
+                        onChange={(e) => handelAppsChange(e, app)}
+                        name={checkedAppsNames.name}
+                      />
+                    }
+                    label={app.name}
+                    key={app.name}
+                  />
+                ))}
+              </FormGroup>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
+            <Button color="inherit" disabled={activeStep === 0} onClick={handleBack} sx={{ mr: 1 }}>
+              Back
+            </Button>
+            <Box sx={{ flex: "1 1 auto" }} />
+
+            <Button onClick={handleNext}>
+              {activeStep === steps.length - 1 ? "Finish" : "Next"}
+            </Button>
+          </Box>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}

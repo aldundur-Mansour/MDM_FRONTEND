@@ -50,4 +50,16 @@ module.exports = function (app) {
       },
     })
   );
+  app.use(
+    "/api5",
+    createProxyMiddleware({
+      target: "http://34.96.145.182",
+      changeOrigin: true,
+      logLevel: "debug",
+      pathRewrite: { "^/api5": "" }, // Add logging to see the proxy in action
+      onProxyReq: function (proxyReq, req, res) {
+        console.log("Proxying request to:", req.originalUrl);
+      },
+    })
+  );
 };
