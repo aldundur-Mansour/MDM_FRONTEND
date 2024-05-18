@@ -4,7 +4,7 @@ module.exports = function (app) {
   app.use(
     "/api1",
     createProxyMiddleware({
-      target: "http://34.150.75.254",
+      target: "http://34.150.75.254:8084/",
       changeOrigin: true,
       logLevel: "debug",
       pathRewrite: { "^/api1": "" }, // Add logging to see the proxy in action
@@ -16,7 +16,7 @@ module.exports = function (app) {
   app.use(
     "/api2",
     createProxyMiddleware({
-      target: "http://35.220.210.216",
+      target: "http://34.150.75.254:8085/",
       changeOrigin: true,
       logLevel: "debug",
       pathRewrite: { "^/api2": "" },
@@ -29,7 +29,7 @@ module.exports = function (app) {
   app.use(
     "/api3",
     createProxyMiddleware({
-      target: "http://34.96.156.97",
+      target: "http://34.150.75.254:8083/",
       changeOrigin: true,
       logLevel: "debug",
       pathRewrite: { "^/api3": "" },
@@ -41,7 +41,7 @@ module.exports = function (app) {
   app.use(
     "/api4",
     createProxyMiddleware({
-      target: "http://34.92.55.50",
+      target: "http://34.150.75.254:8080/",
       changeOrigin: true,
       logLevel: "debug",
       pathRewrite: { "^/api4": "" }, // Add logging to see the proxy in action
@@ -53,7 +53,7 @@ module.exports = function (app) {
   app.use(
     "/api5",
     createProxyMiddleware({
-      target: "http://34.96.145.182",
+      target: "http://34.96.237.62/",
       changeOrigin: true,
       logLevel: "debug",
       pathRewrite: { "^/api5": "" }, // Add logging to see the proxy in action

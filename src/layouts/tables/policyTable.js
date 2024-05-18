@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /**
 =========================================================
 * Material Dashboard 2 React - v2.2.0
@@ -280,29 +281,28 @@ function PolicyTable() {
   let columnsCustom = [
     { Header: "ID", accessor: "ID", width: "45%", align: "left" },
     { Header: "Configuration", accessor: "Configuration", align: "left" },
-    { Header: "Name", accessor: "Name", align: "left" },
+    { Header: "Action", accessor: "Action", align: "left" },
   ];
 
-  let rowsCustom = customConfig?.data?.map((policy, index) => ({
-    ID: (
-      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
-        {policy?._id}
-      </MDTypography>
-    ),
-    Configuration: (
-      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
-        {policy?.configuration_name}
-      </MDTypography>
-    ),
-    Name: (
-      <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
-        {policy?.policyName}
-      </MDTypography>
-    ),
-  }));
-
-  console.log("row", rowsCustom);
-  console.log("new row", deviceRows);
+  let rowsCustom = customConfig?.data?.map((policy, index) => {
+    return {
+      ID: (
+        <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+          {policy?._id}
+        </MDTypography>
+      ),
+      Configuration: (
+        <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+          {policy?.configuration_name}
+        </MDTypography>
+      ),
+      Action: (
+        <MDTypography component="a" variant="caption" color="text" fontWeight="medium">
+          <PolicyModal1 packages={policy} />
+        </MDTypography>
+      ),
+    };
+  });
 
   const handleDeletePolicy = async (policyName) => {
     try {
@@ -331,7 +331,6 @@ function PolicyTable() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      {value === 0 && <MDButton onClick={() => setOpenModal(true)}>Configure Device</MDButton>}{" "}
       {value === 1 && <PolicyModal />}
       {renderSuccessSB}
       <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth>
@@ -483,75 +482,6 @@ function PolicyTable() {
 
 export default PolicyTable;
 
-const deviceSettingsOptions = [
-  "screenCaptureDisabled",
-  "cameraDisabled",
-  "keyguardDisabledFeatures",
-  "defaultPermissionPolicy",
-  "addUserDisabled",
-  "adjustVolumeDisabled",
-  "factoryResetDisabled",
-  "installAppsDisabled",
-  "mountPhysicalMediaDisabled",
-  "modifyAccountsDisabled",
-  "safeBootDisabled",
-  "uninstallAppsDisabled",
-  "statusBarDisabled",
-  "keyguardDisabled",
-  "vpnConfigDisabled",
-  "wifiConfigDisabled",
-  "usbFileTransferDisabled",
-  "smsDisabled",
-  "dataRoamingDisabled",
-  "locationMode",
-];
-
-const appsOptions = [
-  "YouTube",
-  "Slack",
-  "Microsoft Teams",
-  "Zoom",
-  "Google Drive",
-  "Salesforce",
-  "Trello",
-  "Asana",
-  "Adobe Acrobat Reader",
-  "Microsoft Outlook",
-  "Dropbox",
-  "Evernote",
-  "LinkedIn",
-  "QuickBooks",
-  "Shopify",
-  "Google Analytics",
-  "Microsoft OneDrive",
-  "Tableau Mobile",
-  "Jira",
-  "HubSpot",
-];
-
-// Mapping apps to package names (hypothetical)
-const appPackageMap = {
-  YouTube: "com.google.android.youtube",
-  Slack: "com.slack",
-  "Microsoft Teams": "com.microsoft.teams",
-  Zoom: "us.zoom.videomeetings",
-  "Google Drive": "com.google.android.apps.docs",
-  Salesforce: "com.salesforce.chatter",
-  Trello: "com.trello",
-  Asana: "com.asana.app",
-  "Adobe Acrobat Reader": "com.adobe.reader",
-  "Microsoft Outlook": "com.microsoft.office.outlook",
-  Dropbox: "com.dropbox.android",
-  Evernote: "com.evernote",
-  LinkedIn: "com.linkedin.android",
-  QuickBooks: "com.intuit.quickbooks",
-  Shopify: "com.shopify.mobile",
-  "Google Analytics": "com.google.android.apps.giant",
-  "Microsoft OneDrive": "com.microsoft.skydrive",
-  "Tableau Mobile": "com.tableausoftware.app",
-  Jira: "com.atlassian.android.jira.core",
-  HubSpot: "com.hubspot.android",
-};
 const steps = ["Name Your Policy", "Choose Device Options", "Choose Apps"];
 
 function PolicyModal() {
@@ -753,7 +683,7 @@ function PolicyModal() {
 
   return (
     <Box>
-      <MDButton onClick={handleClickOpen}>Set up custom policy</MDButton>
+      <MDButton onClick={handleClickOpen}>Create Policy Template</MDButton>
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
         <DialogTitle>Set Up Custom Policy</DialogTitle>
         <DialogContent>
@@ -851,6 +781,177 @@ function PolicyModal() {
               {activeStep === steps.length - 1 ? "Finish" : "Next"}
             </Button>
           </Box>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
+// eslint-disable-next-line react/prop-types
+function PolicyModal1({ packages }) {
+  const [open, setOpen] = useState(false);
+  const [deviceSettings, setDeviceSettings] = useState({});
+  const [installedApps, setInstalledApps] = useState({});
+  const [policyName, setPolicyName] = useState("");
+  const [savedPolicy, setSavedPolicy] = useState(null);
+  console.log(packages);
+
+  const appPackageMap =
+    packages?.apps && typeof packages.apps === "object"
+      ? packages?.apps.map((item) => {
+          return { [item.name]: item.package };
+        })
+      : [];
+
+  const deviceOption =
+    packages?.deviceOptions && typeof packages.deviceOptions === "object"
+      ? packages?.deviceOptions.map((item) => {
+          return item.name;
+        })
+      : [];
+
+  const appsOption =
+    packages?.apps && typeof packages.apps === "object"
+      ? packages?.apps.map((item) => {
+          return item.name;
+        })
+      : [];
+
+  console.log("hi", deviceOption);
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleToggleDeviceSetting = (option) => {
+    setDeviceSettings((prev) => ({
+      ...prev,
+      [option]: !prev[option],
+    }));
+  };
+
+  const handleAddPolicy = async (policy) => {
+    try {
+      const response = await fetch("api3/mdm/policy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": "",
+        },
+        body: JSON.stringify({
+          ...policy,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        throw new Error(data.message || "Failed to enroll device");
+      }
+      window.location.reload();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleToggleApp = (app) => {
+    setInstalledApps((prev) => ({
+      ...prev,
+      [app]: !prev[app],
+    }));
+  };
+
+  const handleSave = async () => {
+    const mapObj = appPackageMap.reduce((acc, current) => {
+      // Merge each object in the array into the accumulator
+      return { ...acc, ...current };
+    }, {});
+    const applications = Object.keys(installedApps)
+      .filter((app) => installedApps[app])
+      .map((app) => ({
+        packageName: mapObj[app],
+        installType: "FORCE_INSTALLED",
+      }));
+    const policy = {
+      name: policyName,
+      policy: {
+        applications,
+        ...deviceSettings,
+      },
+    };
+    setSavedPolicy(policy);
+    await handleAddPolicy(policy);
+  };
+
+  const findFriendlyName = (targetName) => {
+    const dataArray =
+      packages?.deviceOptions && typeof packages.deviceOptions === "object"
+        ? packages?.deviceOptions
+        : [];
+    const item = dataArray.find((element) => element.name === targetName);
+    return item ? item.friendlyName : null;
+  };
+
+  return (
+    <Box>
+      <Button onClick={handleClickOpen} sx={{ color: "white", backgroundColor: "black" }}>
+        Choose Configuration Template
+      </Button>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+        <DialogTitle>Configure Policy Options</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            label="Policy Name"
+            value={policyName}
+            onChange={(e) => setPolicyName(e.target.value)}
+            margin="normal"
+          />
+          <Typography variant="h6" gutterBottom>
+            Device Settings
+          </Typography>
+          <FormGroup>
+            {deviceOption?.map((option) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={!!deviceSettings[option]}
+                    onChange={() => handleToggleDeviceSetting(option)}
+                    name={option}
+                  />
+                }
+                label={findFriendlyName(option)}
+                key={option}
+              />
+            ))}
+          </FormGroup>
+          <Typography variant="h6" gutterBottom sx={{ marginTop: 2 }}>
+            Apps that can be installed
+          </Typography>
+          <FormGroup>
+            {appsOption?.map((app) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={!!installedApps[app]}
+                    onChange={() => handleToggleApp(app)}
+                    name={app}
+                  />
+                }
+                label={app}
+                key={app}
+              />
+            ))}
+          </FormGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} color="primary">
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
