@@ -280,7 +280,7 @@ function PolicyTable() {
 
   let columnsCustom = [
     { Header: "ID", accessor: "ID", width: "45%", align: "left" },
-    { Header: "Configuration", accessor: "Configuration", align: "left" },
+    { Header: "Template Name", accessor: "Configuration", align: "left" },
     { Header: "Action", accessor: "Action", align: "left" },
   ];
 
@@ -710,7 +710,7 @@ function PolicyModal() {
           {activeStep == 0 && (
             <TextField
               fullWidth
-              label="Policy Name"
+              label="Template Name"
               value={policyName}
               onChange={(e) => setPolicyName(e.target.value)}
               margin="normal"
